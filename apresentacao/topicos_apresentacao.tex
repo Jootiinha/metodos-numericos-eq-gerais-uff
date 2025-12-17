@@ -1,0 +1,436 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{geometry}
+\geometry{margin=1.5cm}
+
+\title{Tópicos para Apresentação\\Equação de Helmholtz - Métodos Numéricos}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{INTRODUÇÃO}
+
+\begin{itemize}
+    \item \textbf{Equação de Helmholtz}: $\nabla^2 u + k^2 u = 0$ em $\Omega = [0,1]^2$
+    \begin{itemize}
+        \item Equação diferencial parcial elíptica
+        \item Surge da equação da onda com solução harmônica no tempo
+        \item Modela fenômenos ondulatórios em regime harmônico
+    \end{itemize}
+    
+    \item \textbf{Interpretação dos termos}:
+    \begin{itemize}
+        \item $\nabla^2 u$: Operador Laplaciano — mede a curvatura espacial da solução
+        \item $k^2 u$: Termo reativo — impõe caráter oscilatório
+        \item $u(x,y)$: Campo escalar desconhecido que queremos determinar
+    \end{itemize}
+    
+    \item \textbf{Número de onda $k$}:
+    \begin{itemize}
+        \item Relacionado à frequência espacial: $k = \omega/c$
+        \item Quanto maior $k$, maior a frequência espacial
+        \item Valores testados: $k = 1, 20, 40, 100$
+        \item Para $k$ grande, requer malhas mais refinadas
+    \end{itemize}
+    
+    \item \textbf{Aplicações práticas}:
+    \begin{itemize}
+        \item Acústica arquitetônica
+        \item Propagação eletromagnética
+        \item Vibrações mecânicas
+        \item Difração e espalhamento de ondas
+    \end{itemize}
+    
+    \item \textbf{Objetivo do trabalho}:
+    \begin{itemize}
+        \item Aplicar o Método das Diferenças Finitas Centradas de Segunda Ordem (MDFC2)
+        \item Analisar efeitos numéricos, especialmente poluição numérica
+        \item Investigar influência do número de onda $k$
+        \item Avaliar uso de IA como ferramenta auxiliar
+    \end{itemize}
+\end{itemize}
+
+\section*{METODOLOGIA}
+
+\begin{itemize}
+    \item \textbf{Parâmetro $N$ — Refinamento da malha}:
+    \begin{itemize}
+        \item $N$: número de subintervalos em cada direção do domínio $[0,1]^2$
+        \item Malha uniforme: dividimos $[0,1]$ em $N$ partes iguais
+        \item Tamanho do passo: $h = 1/N$
+        \item Total de pontos da malha: $(N+1) \times (N+1)$ pontos
+        \item Pontos internos (incógnitas): $(N-1) \times (N-1) = (N-1)^2$ incógnitas
+        \item Valores testados: $N = 64, 128, 192, 256$
+        \item Exemplo: $N=64$ $\Rightarrow$ $h = 1/64 = 0.015625$, $63 \times 63 = 3.969$ incógnitas
+        \item Exemplo: $N=256$ $\Rightarrow$ $h = 1/256 = 0.00390625$, $255 \times 255 = 65.025$ incógnitas
+    \end{itemize}
+    
+    \item \textbf{Discretização MDFC2 (Método das Diferenças Finitas Centradas de 2ª Ordem)}:
+    \begin{itemize}
+        \item Stencil de 5 pontos: centro + 4 vizinhos (norte, sul, leste, oeste)
+        \item Equação discretizada:
+        \begin{equation*}
+        \frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{h^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{h^2} + k^2 u_{i,j} = 0
+        \end{equation*}
+        \item Primeiro termo: discretização de $\frac{\partial^2 u}{\partial x^2}$
+        \item Segundo termo: discretização de $\frac{\partial^2 u}{\partial y^2}$
+        \item Terceiro termo: termo reativo $k^2 u$ avaliado no ponto $(i,j)$
+    \end{itemize}
+    
+    \item \textbf{Sistema linear resultante}:
+    \begin{itemize}
+        \item Forma: $A\mathbf{u} = \mathbf{b}$
+        \item Matriz $A = L + k^2 I$, onde $L$ é o Laplaciano discreto
+        \item Dimensão: $(N-1)^2 \times (N-1)^2$
+        \item Matriz esparsa: apenas 5 diagonais não-nulas
+        \item Vetor $\mathbf{b}$: construído a partir das condições de contorno Dirichlet
+    \end{itemize}
+    
+    \item \textbf{Matrizes esparsas — Formatos}:
+    \begin{itemize}
+        \item \textbf{LIL (List of Lists)}: formato usado para montagem eficiente da matriz
+        \begin{itemize}
+            \item Permite inserção rápida de elementos
+            \item Ideal para construção da matriz
+        \end{itemize}
+        \item \textbf{CSC (Compressed Sparse Column)}: formato usado para solução
+        \begin{itemize}
+            \item Otimizado para operações de álgebra linear
+            \item Usado pelo \texttt{scipy.sparse} para solvers
+            \item Conversão LIL $\to$ CSC após montagem
+        \end{itemize}
+        \item Vantagem: memória irrisória comparada à matriz densa
+        \item Exemplo: $N=200$ $\Rightarrow$ matriz densa $\approx 12$ GB RAM (inviável)
+        \item Com esparsidade: apenas algumas dezenas de MB
+    \end{itemize}
+    
+    \item \textbf{Solvers implementados — Métodos de solução do sistema linear}:
+    
+    \begin{itemize}
+        \item \textbf{SPLU — Sparse LU (Fatoração LU Esparsa)}:
+        \begin{itemize}
+            \item Nome completo: \texttt{scipy.sparse.linalg.splu}
+            \item Tipo: Método direto (resolve exatamente, sem iterações)
+            \item Processo:
+            \begin{enumerate}
+                \item Fatora a matriz $A$ em $A = LU$ (Lower-Upper)
+                \item Resolve $Ly = b$ (substituição progressiva)
+                \item Resolve $Ux = y$ (substituição regressiva)
+            \end{enumerate}
+            \item Eficiente para: $N \leq 192$ (até $\sim 40.000$ incógnitas)
+            \item Complexidade: $O(N^3)$ operações, $O(N^2)$ memória
+            \item Vantagem: solução exata, sem erro de iteração
+            \item Desvantagem: custo cresce rapidamente com $N$
+        \end{itemize}
+        
+        \item \textbf{GMRES+ILU — Generalized Minimal Residual com pré-condicionador ILU}:
+        \begin{itemize}
+            \item \textbf{GMRES}: \texttt{scipy.sparse.linalg.gmres}
+            \begin{itemize}
+                \item Nome completo: Generalized Minimal Residual Method
+                \item Tipo: Método iterativo (aproximações sucessivas)
+                \item Ideia: encontra solução no espaço de Krylov
+                \item Minimiza resíduo $\|b - Ax\|_2$ em cada iteração
+                \item Parâmetros: restart=100, maxiter=1000
+                \item Tolerâncias: rtol=$10^{-8}$, atol=$10^{-12}$
+            \end{itemize}
+            \item \textbf{ILU}: \texttt{scipy.sparse.linalg.spilu}
+            \begin{itemize}
+                \item Nome completo: Incomplete LU Factorization
+                \item Tipo: Pré-condicionador (melhora convergência do GMRES)
+                \item Processo: fatora $A \approx LU$ de forma incompleta (mais rápida)
+                \item Parâmetros: drop\_tol=$10^{-3}$, fill\_factor=$20$
+                \item Função: acelera convergência do GMRES
+            \end{itemize}
+            \item Eficiente para: $N \geq 256$ (sistemas grandes)
+            \item Complexidade: $O(N^2)$ por iteração
+            \item Vantagem: escalável para sistemas muito grandes
+            \item Desvantagem: pode não convergir se mal condicionado
+        \end{itemize}
+        
+        \item \textbf{Seleção automática (modo "auto")}:
+        \begin{itemize}
+            \item Heurística: escolhe solver baseado no tamanho do sistema
+            \item Se $n \leq 40.000$ incógnitas: usa SPLU
+            \item Se $n > 40.000$ incógnitas: usa GMRES+ILU
+            \item Estratégia de fallback robusta:
+            \begin{itemize}
+                \item Se ILU falha e $n \leq 100.000$: tenta SPLU
+                \item Se ILU falha e $n > 100.000$: usa GMRES sem pré-condicionador
+            \end{itemize}
+            \item Garante solução para todos os casos
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Solução exata para validação}:
+    \begin{itemize}
+        \item Forma: $u_{\text{exata}} = \sum_{i=1}^{3} \cos(k(x\cos\theta_i + y\sin\theta_i))$
+        \item Superposição de 3 ondas planas
+        \item Cada onda tem direção definida pelo ângulo $\theta_i$
+        \item Imposta como condição de Dirichlet na fronteira
+        \item Permite calcular erro exato: $u_{\text{num}} - u_{\text{exata}}$
+    \end{itemize}
+    
+    \item \textbf{6 grupos de testes}:
+    \begin{itemize}
+        \item Cada grupo tem diferentes combinações de ângulos $\Theta = \{\theta_1, \theta_2, \theta_3\}$
+        \item Grupo 1: $\Theta = \{0, \pi/8, \pi/4\}$
+        \item Grupo 2: $\Theta = \{\pi/16, \pi/8, 3\pi/16\}$
+        \item Grupo 3: $\Theta = \{\pi/8, 3\pi/16, \pi/4\}$
+        \item Grupos 4, 5, 6: outras combinações
+        \item Permite análise abrangente do comportamento do método
+    \end{itemize}
+    
+    \item \textbf{Otimizações implementadas}:
+    \begin{itemize}
+        \item \textbf{Cache de matrizes}: reutiliza matrizes Laplacianas para mesmo $N$
+        \item Ganho: $\sim 90\%$ mais rápido na construção
+        \item \textbf{Paralelização}: processamento paralelo de múltiplos casos
+        \item Ganho: 3-4 vezes mais rápido
+        \item \textbf{Pré-aquecimento}: construção prévia de estruturas
+    \end{itemize}
+\end{itemize}
+
+\section*{RESULTADOS PRINCIPAIS}
+
+\subsection*{Quantificação do Erro}
+
+\begin{itemize}
+    \item \textbf{Norma $L^2(\Omega)$ integral}:
+    \begin{itemize}
+        \item Definição: $\|u\|_{L^2(\Omega)}^2 = \int_\Omega |u(x,y)|^2 \, dx \, dy$
+        \item Erro relativo: $E_{L^2} = \frac{\|u_{\text{aprox}} - u_{\text{exata}}\|_{L^2(\Omega)}}{\|u_{\text{exata}}\|_{L^2(\Omega)}}$
+    \end{itemize}
+    
+    \item \textbf{Aproximação discreta pela regra do retângulo}:
+    \begin{itemize}
+        \item $\|u\|_{L^2(\Omega)}^2 \approx h^2 \sum_{i,j} |u_{i,j}|^2 = h^2 \|\mathbf{u}\|_2^2$
+        \item Portanto: $\|u\|_{L^2(\Omega)} \approx h \|\mathbf{u}\|_2$
+        \item Erro calculado: $E_{L^2} \approx \frac{h \|\mathbf{U}_{\text{aprox}} - \mathbf{U}_{\text{exata}}\|_2}{h \|\mathbf{U}_{\text{exata}}\|_2}$
+        \item Justificativa: aproximação de ordem $O(h^2)$, consistente com ordem do método
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Resultados por número de onda $k$}
+
+\begin{itemize}
+    \item \textbf{$k=1$ (baixa frequência)}:
+    \begin{itemize}
+        \item Erro relativo: $10^{-7}$ a $10^{-8}$ (excelente precisão)
+        \item Taxa de convergência: $p \approx 2.0$ (ordem 2 confirmada)
+        \item Comportamento: método funciona perfeitamente
+        \item Exemplos:
+        \begin{itemize}
+            \item $N=64$: erro $6.4 \times 10^{-7}$
+            \item $N=128$: erro $1.6 \times 10^{-7}$ (4x menor)
+            \item $N=256$: erro $4.1 \times 10^{-8}$ (15x menor)
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{$k=20$ (frequência média)}:
+    \begin{itemize}
+        \item Erro relativo: $4.2 \times 10^{-2}$ para $N=128$ (4.2\%)
+        \item Taxa de convergência: $p \approx 1.5-1.8$ (degradada)
+        \item Comportamento: início do efeito de poluição numérica
+        \item Exemplos:
+        \begin{itemize}
+            \item $N=64$: erro $2.1 \times 10^{-1}$ (21\%)
+            \item $N=128$: erro $4.2 \times 10^{-2}$ (4.2\%, 5x menor)
+            \item $N=256$: erro $1.0 \times 10^{-2}$ (1.0\%, 21x menor)
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{$k=40$ (alta frequência)}:
+    \begin{itemize}
+        \item Erro relativo: $2.8 \times 10^{-1}$ para $N=128$ (28\%)
+        \item Taxa de convergência: $p \approx 1.2-1.5$ (degradada)
+        \item Comportamento: degradação significativa
+        \item Requer $N \geq 256$ para precisão aceitável
+    \end{itemize}
+    
+    \item \textbf{$k=100$ (muito alta frequência)}:
+    \begin{itemize}
+        \item Erro relativo: $> 1.0$ (poluição numérica severa)
+        \item Taxa de convergência: $p < 1$ (muito degradada)
+        \item Comportamento: erro pode ultrapassar $300\%$
+        \item Exemplos:
+        \begin{itemize}
+            \item $N=64$: erro $2.5$ (250\%)
+            \item $N=128$: erro $1.5$ (150\%)
+            \item $N=256$: erro $3.6$ (360\%, piora!)
+        \end{itemize}
+        \item Mesmo com refinamento, erro permanece alto
+    \end{itemize}
+\end{itemize}
+
+\subsection*{Regra de Ouro — Pontos por comprimento de onda}
+
+\begin{itemize}
+    \item \textbf{Definição}: $N_{\lambda} = \frac{2\pi N}{k}$ pontos por comprimento de onda
+    \begin{itemize}
+        \item $N$: número de subintervalos
+        \item $k$: número de onda
+        \item Comprimento de onda: $\lambda = 2\pi/k$
+    \end{itemize}
+    
+    \item \textbf{Recomendação}: $N_{\lambda} \gtrsim 10-20$ pontos por comprimento de onda
+    
+    \item \textbf{Exemplos}:
+    \begin{itemize}
+        \item $k=1$, $N=64$: $N_{\lambda} = \frac{2\pi \times 64}{1} \approx 402$ (excelente)
+        \item $k=20$, $N=128$: $N_{\lambda} = \frac{2\pi \times 128}{20} \approx 40$ (bom)
+        \item $k=100$, $N=256$: $N_{\lambda} = \frac{2\pi \times 256}{100} \approx 16$ (marginal)
+    \end{itemize}
+    
+    \item \textbf{Requisito para alta frequência}: $N_{\lambda} \geq 20-30$ para precisão aceitável
+\end{itemize}
+
+\subsection*{Desempenho Computacional}
+
+\begin{itemize}
+    \item \textbf{$N=64$}:
+    \begin{itemize}
+        \item Incógnitas: $63 \times 63 = 3.969$
+        \item Tempo de construção: $0.001$ s
+        \item Tempo de solução: $0.008$ s
+        \item Solver: SPLU
+    \end{itemize}
+    
+    \item \textbf{$N=128$}:
+    \begin{itemize}
+        \item Incógnitas: $127 \times 127 = 16.129$
+        \item Tempo de construção: $0.003$ s
+        \item Tempo de solução: $0.039$ s
+        \item Solver: SPLU
+    \end{itemize}
+    
+    \item \textbf{$N=192$}:
+    \begin{itemize}
+        \item Incógnitas: $191 \times 191 = 36.481$
+        \item Tempo de construção: $0.006$ s
+        \item Tempo de solução: $0.117$ s
+        \item Solver: SPLU
+    \end{itemize}
+    
+    \item \textbf{$N=256$}:
+    \begin{itemize}
+        \item Incógnitas: $255 \times 255 = 65.025$
+        \item Tempo de construção: $0.012$ s
+        \item Tempo de solução: $0.423$ s
+        \item Solver: GMRES+ILU (necessário para sistemas grandes)
+    \end{itemize}
+    
+    \item \textbf{Otimizações}:
+    \begin{itemize}
+        \item Cache: $\sim 90\%$ mais rápido na construção
+        \item Paralelização: 3-4 vezes mais rápido no processamento
+    \end{itemize}
+\end{itemize}
+
+\section*{ANÁLISE E DISCUSSÃO}
+
+\begin{itemize}
+    \item \textbf{Poluição numérica}:
+    \begin{itemize}
+        \item Definição: mesmo com refinamento, erro cresce com aumento de $k$
+        \item Causa: poucos pontos por comprimento de onda ($N_{\lambda} < 20$)
+        \item Mecanismo:
+        \begin{enumerate}
+            \item Poucos pontos por comprimento de onda
+            \item Erro de fase: velocidade de fase numérica $\neq$ exata
+            \item Acúmulo: erro se propaga e amplifica
+            \item Resultado: solução numérica "atrasa" espacialmente
+        \end{enumerate}
+        \item Consequência: taxa de convergência degrada ($p < 2$)
+    \end{itemize}
+    
+    \item \textbf{Comparação entre grupos}:
+    \begin{itemize}
+        \item Diferenças pequenas mas significativas
+        \item Devido à direção das ondas planas na solução exata
+        \item Efeito secundário comparado à influência de $k$ e $N$
+    \end{itemize}
+    
+    \item \textbf{Validação}:
+    \begin{itemize}
+        \item Resultados consistentes com literatura
+        \item Taxa de convergência $p \approx 2.0$ para $k$ pequeno (conforme teoria)
+        \item Requisito de malha $N_{\lambda} \geq 10-20$ (alinhado com literatura)
+        \item Poluição numérica observada conforme esperado
+    \end{itemize}
+    
+    \item \textbf{Limitações do método}:
+    \begin{itemize}
+        \item Poluição numérica inerente a métodos de baixa ordem
+        \item Custo computacional cresce com $N^2$
+        \item Limitado a domínios retangulares simples
+        \item Para $k$ grande, requer malhas muito refinadas
+    \end{itemize}
+\end{itemize}
+
+\section*{CONCLUSÕES}
+
+\begin{itemize}
+    \item \textbf{MDFC2 adequado} para $k \leq 20$
+    \begin{itemize}
+        \item Boa precisão com malhas razoáveis
+        \item Erros aceitáveis ($< 5\%$ com $N \geq 128$)
+    \end{itemize}
+    
+    \item \textbf{Taxa de convergência} confirma ordem 2 para $k$ pequeno
+    \begin{itemize}
+        \item $p \approx 2.0$ para $k=1$
+        \item Valida implementação e análise teórica
+    \end{itemize}
+    
+    \item \textbf{Poluição numérica} limita eficiência para $k$ grande
+    \begin{itemize}
+        \item Fenômeno inerente a métodos de baixa ordem
+        \item Requer técnicas mais sofisticadas para mitigar
+    \end{itemize}
+    
+    \item \textbf{IA útil} como ferramenta de suporte acadêmico
+    \begin{itemize}
+        \item Auxiliou na implementação, análise e documentação
+    \end{itemize}
+    
+    \item \textbf{Perspectivas futuras}:
+    \begin{itemize}
+        \item Métodos de ordem superior (4ª, 6ª ordem)
+        \item Malhas adaptativas
+        \item Pré-condicionadores especializados
+        \item Extensão para 3D
+    \end{itemize}
+\end{itemize}
+
+\section*{PONTOS-CHAVE PARA DESTACAR}
+
+\begin{itemize}
+    \item \textbf{Excelente precisão} para $k=1$: erro $< 10^{-6}$
+    \item \textbf{Boa precisão} para $k=20$ com $N \geq 128$: erro $< 5\%$
+    \item \textbf{Poluição numérica} severa para $k=100$: erro $> 300\%$
+    \item \textbf{Importância do refinamento}: $N=64 \to 256$ reduz erro em 21x para $k=20$
+    \item \textbf{Implementação eficiente}: matrizes esparsas, otimizações, seleção automática de solver
+\end{itemize}
+
+\section*{DICAS DE APRESENTAÇÃO}
+
+\begin{itemize}
+    \item \textbf{Início}: Contextualizar equação de Helmholtz e aplicações
+    \item \textbf{Metodologia}: Enfatizar simplicidade do MDFC2 e eficiência das matrizes esparsas
+    \begin{itemize}
+        \item Explicar claramente o que é $N$ e sua relação com o refinamento
+        \item Detalhar os solvers: SPLU e GMRES+ILU, com seus nomes completos
+    \end{itemize}
+    \item \textbf{Resultados}: Mostrar gráficos de superfície 3D e cortes 2D
+    \item \textbf{Análise}: Explicar poluição numérica de forma clara
+    \item \textbf{Conclusões}: Destacar limitações e perspectivas futuras
+    \item \textbf{Tempo}: Distribuir bem o tempo entre seções
+\end{itemize}
+
+\end{document}

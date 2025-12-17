@@ -28,6 +28,54 @@ $N = 200 \Rightarrow 40.000$ incógnitas. Matriz densa: $\approx 12$ GB RAM (inv
 \end{block}
 \end{frame}
 
+\begin{frame}{Otimização: Sistema de Cache}
+\begin{block}{Problema}
+Ao testar múltiplos grupos com mesmo $N$, reconstruir matrizes e coordenadas é custoso.
+\end{block}
+
+\begin{block}{Solução: Cache Global}
+Dois caches implementados:
+\begin{itemize}
+\item \textbf{Cache de matrizes Laplacianas}: Armazena $(L, h)$ para cada $N$
+\item \textbf{Cache de coordenadas}: Armazena $(x, y, X, Y)$ para cada $N$
+\end{itemize}
+\end{block}
+
+\begin{block}{Lógica de Funcionamento}
+\begin{enumerate}
+\item Verifica se dados para $N$ já existem no cache
+\item Se existe: retorna do cache (instantâneo)
+\item Se não existe: constrói e armazena no cache
+\item Pré-aquecimento: constrói todas as estruturas no início
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}{Otimização: Sistema de Cache (continuação)}
+\begin{block}{Ganho de Performance}
+\begin{itemize}
+\item \textbf{Redução de tempo}: $\sim 90\%$ mais rápido na construção
+\item \textbf{Reutilização}: Mesma matriz $L$ usada para todos os grupos com mesmo $N$
+\item \textbf{Eficiência}: Especialmente importante ao testar 6 grupos $\times$ 4 valores de $k$
+\end{itemize}
+\end{block}
+
+\begin{block}{Exemplo Prático}
+Para $N=128$ testando 6 grupos e 4 valores de $k$:
+\begin{itemize}
+\item \textbf{Sem cache}: 24 construções de matriz Laplaciana
+\item \textbf{Com cache}: 1 construção + 23 reutilizações
+\end{itemize}
+\end{block}
+
+\begin{block}{Implementação}
+\begin{itemize}
+\item Dicionários globais: \texttt{\_laplacian\_cache} e \texttt{\_coords\_cache}
+\item Chave: valor de $N$, Valor: estrutura correspondente
+\end{itemize}
+\end{block}
+\end{frame}
+
 \begin{frame}{Solvers Implementados}
 \begin{block}{SPLU - Método Direto}
 \begin{itemize}
@@ -35,8 +83,6 @@ $N = 200 \Rightarrow 40.000$ incógnitas. Matriz densa: $\approx 12$ GB RAM (inv
 \item Eficiente para $N \leq 192$: $O(N^3)$ operações, $O(N^2)$ memória
 \end{itemize}
 \end{block}
-
-\vspace{0.2cm}
 
 \begin{block}{GMRES+ILU - Método Iterativo}
 \begin{itemize}
@@ -46,11 +92,87 @@ $N = 200 \Rightarrow 40.000$ incógnitas. Matriz densa: $\approx 12$ GB RAM (inv
 \end{block}
 \end{frame}
 
-\begin{frame}{Seleção Automática}
+\begin{frame}{Pseudo Código - Solver SPLU}
+\tiny
+\begin{block}{Método Direto (Fatoração LU Esparsa)}
+\begin{algorithmic}[1]
+\Require Matriz esparsa $A$, vetor $b$
+\Ensure Solução $\mathbf{x}$ tal que $A\mathbf{x} = \mathbf{b}$
+\State $n \gets$ número de incógnitas
+\If{$n \leq 40000$}
+    \State $LU \gets$ \texttt{splu($A$)}
+    \State $\mathbf{x} \gets LU.\texttt{solve($b$)}$
+    \State \Return $\mathbf{x}$
+\EndIf
+\end{algorithmic}
+\end{block}
+\vspace{-0.2cm}
+\begin{block}{Complexidade}
+\tiny
+Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
+\end{block}
+\end{frame}
+
+\begin{frame}{Pseudo Código - Solver GMRES+ILU}
+\tiny
+\begin{block}{Método Iterativo com Pré-condicionador}
+\begin{algorithmic}[1]
+\Require Matriz esparsa $A$, vetor $b$
+\Ensure Solução $\mathbf{x}$ tal que $A\mathbf{x} = \mathbf{b}$
+\State $n \gets$ número de incógnitas
+\If{$n > 40000$}
+    \State $A \gets A.\texttt{astype(complex128)}$
+    \State $ILU \gets$ \texttt{spilu($A$, drop\_tol=$10^{-3}$, fill\_factor=$20$)}
+    \State $M \gets$ \texttt{LinearOperator($ILU.\texttt{solve}$)}
+    \State $\mathbf{x}, info \gets$ \texttt{gmres($A$, $b$, $M=M$, rtol=$10^{-8}$, restart=$100$, maxiter=$1000$)}
+    \If{ILU falha}
+        \If{$n \leq 100000$}
+            \State \Return \texttt{SPLU($A$, $b$)}
+        \Else
+            \State $\mathbf{x}, info \gets$ \texttt{gmres($A$, $b$, rtol=$10^{-8}$, maxiter=$1000$)}
+        \EndIf
+    \EndIf
+    \State \Return $\mathbf{x}$
+\EndIf
+\end{algorithmic}
+\end{block}
+\end{frame}
+
+\begin{frame}{Pseudo Código - Seleção Automática}
+\tiny
+\begin{block}{Algoritmo de Seleção de Solver}
+\begin{algorithmic}[1]
+\Require Matriz esparsa $A$, vetor $b$, modo $solver$
+\Ensure Solução $\mathbf{x}$ e solver utilizado
+\State $n \gets$ número de incógnitas
+\If{$solver =$ \texttt{"auto"}}
+    \If{$n \leq 40000$}
+        \State $solver \gets$ \texttt{"splu"}
+    \Else
+        \State $solver \gets$ \texttt{"gmres\_ilu"}
+    \EndIf
+\EndIf
+\If{$solver =$ \texttt{"splu"}}
+    \State \Return \texttt{SPLU($A$, $b$)}
+\ElsIf{$solver =$ \texttt{"gmres\_ilu"}}
+    \State \Return \texttt{GMRES\_ILU($A$, $b$)}
+\EndIf
+\end{algorithmic}
+\end{block}
+\end{frame}
+
+\begin{frame}{Estratégia de Fallback}
 \begin{block}{Modo Auto}
 \begin{itemize}
 \item Escolha automática do solver baseada no tamanho do sistema
-\item Fallback robusto: se ILU falha, usa SPLU ou GMRES sem pré-condicionador
+\item Heurística: $n \leq 40000$ usa SPLU, $n > 40000$ usa GMRES+ILU
+\end{itemize}
+\end{block}
+
+\begin{block}{Fallback Robusto}
+\begin{itemize}
+\item Se ILU falha e $n \leq 100000$: usa SPLU
+\item Se ILU falha e $n > 100000$: usa GMRES sem pré-condicionador
 \item Garante solução para todos os casos
 \end{itemize}
 \end{block}
