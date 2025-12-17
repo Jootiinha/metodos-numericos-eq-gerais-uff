@@ -3,23 +3,19 @@
 
 \section{Contexto e Métodos Relacionados}
 
-\begin{frame}{Equação de Helmholtz: Contexto Histórico}
-\begin{block}{Origem}
-A equação de Helmholtz surge da separação de variáveis na equação da onda:
-\begin{equation*}
-\frac{\partial^2 u}{\partial t^2} = c^2 \Delta u \quad \Rightarrow \quad \Delta u + k^2 u = 0
-\end{equation*}
-onde $k = \omega/c$ é o número de onda.
+\begin{frame}{Contexto e Relevância}
+\begin{block}{Importância na Computação Científica}
+\begin{itemize}
+\item Desafio numérico fundamental em problemas de propagação de ondas
+\item Base para problemas de espalhamento, radiação e acústica
+\item Requer métodos eficientes para $k$ grande (alta frequência)
+\end{itemize}
 \end{block}
 
-\vspace{0.2cm}
+\vspace{0.3cm}
 
-\begin{block}{Importância}
-\begin{itemize}
-\item Modela fenômenos de propagação de ondas em regime estacionário
-\item Base para problemas de espalhamento e radiação
-\item Desafio numérico fundamental em computação científica
-\end{itemize}
+\begin{block}{Abordagens na Literatura}
+Diversos métodos numéricos têm sido desenvolvidos e estudados para resolver a equação de Helmholtz, cada um com suas vantagens e limitações.
 \end{block}
 \end{frame}
 
@@ -74,14 +70,14 @@ Para $k$ grande, métodos de baixa ordem requerem:
 \begin{equation*}
 N_{\lambda} = \frac{2\pi}{kh} \gtrsim 10-20
 \end{equation*}
-Caso contrário, erro de fase acumula e solução degrada.
+Caso contrário, erro de fase acumula e solução degrada (Babuška \& Sauter, 1997).
 \end{block}
 
 \vspace{0.2cm}
 
 \begin{block}{Soluções na Literatura}
 \begin{itemize}
-\item \textbf{Métodos de alta ordem}: 4ª, 6ª ordem (reduz $N_{\lambda}$ necessário)
+\item \textbf{Métodos de alta ordem}: 4ª, 6ª ordem (reduz $N_{\lambda}$ necessário) (Ihlenburg \& Babuška, 1995)
 \item \textbf{Malhas adaptativas}: Refinamento local
 \item \textbf{Pré-condicionadores especializados}: Otimizados para Helmholtz
 \item \textbf{Métodos híbridos}: Combinam diferentes abordagens
@@ -92,21 +88,42 @@ Caso contrário, erro de fase acumula e solução degrada.
 \begin{frame}{Resultados Típicos na Literatura}
 \begin{block}{Padrões Observados}
 \begin{itemize}
-\item \textbf{Ordem 2}: Taxa de convergência $p \approx 2.0$ para $k$ pequeno
-\item \textbf{Poluição}: Taxa degrada para $p < 1$ quando $kh$ grande
-\item \textbf{Requisito de malha}: $N_{\lambda} \geq 10$ mínimo, $N_{\lambda} \geq 20$ recomendado
+\item \textbf{Ordem 2}: Taxa de convergência $p \approx 2.0$ para $k$ pequeno (LeVeque, 2007)
+\item \textbf{Poluição}: Taxa degrada para $p < 1$ quando $kh$ grande (Babuška \& Sauter, 1997)
+\item \textbf{Requisito de malha}: $N_{\lambda} \geq 10$ mínimo, $N_{\lambda} \geq 20$ recomendado (Ihlenburg \& Babuška, 1995)
 \item \textbf{Erros relativos}: $10^{-6}$ a $10^{-8}$ alcançáveis para $k$ pequeno
 \end{itemize}
 \end{block}
 \end{frame}
 
 \begin{frame}{Nossos Resultados vs Literatura}
+\begin{columns}
+\begin{column}{0.5\textwidth}
 \begin{block}{Comparação}
 \begin{itemize}
-\item Taxa experimental: $p \approx 2.0$ para $k=1$ (conforme esperado)
-\item Taxa degrada para $p \approx 0.5-1.0$ para $k=100$ (poluição numérica)
+\item Taxa experimental: $p \approx 2.0$ para $k=1$ (conforme esperado - LeVeque, 2007)
+\item Taxa degrada para $p \approx 0.5-1.0$ para $k=100$ (poluição numérica - Babuška \& Sauter, 1997)
 \item Erros relativos: $10^{-7}$ a $10^{-8}$ para $k=1$ (excelente)
 \item Comportamento consistente com literatura
 \end{itemize}
 \end{block}
+\end{column}
+
+\begin{column}{0.5\textwidth}
+\begin{block}{Referências Principais}
+\tiny
+\begin{itemize}
+\item \textbf{Babuška, I., \& Sauter, S.} (1997). Is the pollution effect of the FEM avoidable for the Helmholtz equation considering high wave numbers? \textit{SIAM Review}, 39(3), 484-509.
+
+\vspace{0.15cm}
+
+\item \textbf{Ihlenburg, F., \& Babuška, I.} (1995). Finite element solution of the Helmholtz equation with high wave number part I: The $h$-version of the FEM. \textit{Computers \& Mathematics with Applications}, 30(9), 9-37.
+
+\vspace{0.15cm}
+
+\item \textbf{LeVeque, R. J.} (2007). \textit{Finite Difference Methods for Ordinary and Partial Differential Equations: Steady-State and Time-Dependent Problems}. SIAM.
+\end{itemize}
+\end{block}
+\end{column}
+\end{columns}
 \end{frame}
