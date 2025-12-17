@@ -1,0 +1,19 @@
+[project]
+name = "mestrado-trabalho-m-n-2"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Joao Carlos Romero Monteiro",email = "joao.monteiro@ifood.com.br"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "scipy (>=1.16.3,<2.0.0)",
+    "matplotlib (>=3.10.8,<4.0.0)",
+    "pyyaml (>=6.0.0,<7.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

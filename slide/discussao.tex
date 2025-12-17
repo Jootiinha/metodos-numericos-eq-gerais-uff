@@ -1,0 +1,94 @@
+% Seção: Discussão Detalhada
+
+\section{Discussão}
+
+\begin{frame}{Interpretação dos Resultados}
+\begin{block}{Regime de Baixa Frequência ($k=1$)}
+\begin{itemize}
+\item \textbf{Taxa de convergência}: $p \approx 2.0$ (conforme esperado)
+\item \textbf{Erro relativo}: $10^{-7}$ a $10^{-8}$ (excelente precisão)
+\item \textbf{Comportamento}: Método funciona perfeitamente, erro dominado por truncamento
+\item \textbf{Conclusão}: Diferenças finitas de 2ª ordem são adequadas
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Regime de Alta Frequência ($k=100$)}
+\begin{itemize}
+\item \textbf{Taxa de convergência}: $p \approx 0.5-1.0$ (degradada)
+\item \textbf{Erro relativo}: $O(1)$ a $O(10)$ (inaceitável)
+\item \textbf{Causa}: Poluição numérica - poucos pontos por comprimento de onda
+\item \textbf{Solução}: Requer $N_{\lambda} \geq 20-30$, ou seja, $N \gtrsim 400-600$
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Análise da Poluição Numérica}
+\begin{block}{Definição}
+\textbf{Poluição Numérica}: Mesmo com refinamento de malha, o erro cresce com o aumento de $k$, devido à má representação da fase da onda.
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Mecanismo}
+\begin{enumerate}
+\item \textbf{Poucos pontos por comprimento de onda}: $N_{\lambda} < 20$
+\item \textbf{Erro de fase}: Velocidade de fase numérica $\neq$ exata
+\item \textbf{Acúmulo}: Erro se propaga e amplifica
+\item \textbf{Resultado}: Solução numérica "atrasa" espacialmente
+\end{enumerate}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Consequência}
+É necessário um número crescente de pontos por comprimento de onda para manter a precisão quando $k$ aumenta.
+\end{block}
+\end{frame}
+
+\begin{frame}{Comparação com Literatura}
+\begin{block}{Resultados Consistentes}
+\begin{itemize}
+\item \textbf{Ordem de convergência}: $p \approx 2.0$ para $k$ pequeno (conforme teoria)
+\item \textbf{Requisito de malha}: $N_{\lambda} \geq 10-20$ (alinhado com literatura)
+\item \textbf{Poluição numérica}: Observada para $kh$ grande (esperado)
+\item \textbf{Erros relativos}: $10^{-4}$ para $k=1$ com $N=60$ (trabalho original)
+\item \textbf{Erros relativos}: $10^{-7}$ a $10^{-8}$ para $k=1$ com $N \geq 128$ (extensão)
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Contribuições do Trabalho}
+\begin{itemize}
+\item Validação numérica completa (6 grupos, múltiplas malhas)
+\item Análise sistemática da taxa de convergência
+\item Implementação eficiente com matrizes esparsas
+\item Análise do efeito de poluição numérica
+\item Avaliação do uso de IA como ferramenta auxiliar
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Limitações e Desafios}
+\begin{block}{Limitações do Método}
+\begin{itemize}
+\item \textbf{Poluição numérica}: Inerente a métodos de baixa ordem
+\item \textbf{Custo computacional}: Cresce com $N^2$ (sistemas grandes)
+\item \textbf{Geometria}: Limitado a domínios retangulares simples
+\item \textbf{Alta frequência}: Requer malhas muito refinadas
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Desafios Enfrentados}
+\begin{itemize}
+\item \textbf{Sistemas grandes}: Necessidade de métodos iterativos
+\item \textbf{Condicionamento}: Piora com $k$ grande
+\item \textbf{Singularidades}: Tratamento de casos onde ILU falha
+\item \textbf{Performance}: Otimização através de cache e paralelização
+\end{itemize}
+\end{block}
+\end{frame}

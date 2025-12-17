@@ -1,0 +1,32 @@
+% Arquivo principal da apresentação
+% Organização modular: cada seção em arquivo separado
+
+\documentclass[aspectratio=169]{beamer}
+
+% Incluir preâmbulo
+\input{preambulo.tex}
+
+\begin{document}
+
+% Slide de título
+\begin{frame}
+\titlepage
+\end{frame}
+
+% Sumário
+\begin{frame}{Sumário}
+\tableofcontents
+\end{frame}
+
+% Incluir seções
+\input{introducao.tex}
+\input{teoria.tex}
+\input{metodologia.tex}
+\input{referencias_metodos.tex}
+\input{resultados.tex}
+\input{discussao.tex}
+\input{ia_ferramenta.tex}
+\input{conclusoes.tex}
+\input{final.tex}
+
+\end{document}

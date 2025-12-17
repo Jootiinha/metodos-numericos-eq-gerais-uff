@@ -1,0 +1,492 @@
+% Seção 3: Resultados
+
+\section{Resultados}
+
+\begin{frame}{Quantificação do Erro}
+\begin{block}{Norma Discreta ($\ell_2$)}
+\begin{equation*}
+E_{\ell_2} = \frac{\|U_{\mathrm{aprox}} - U_{\mathrm{exata}}\|_2}{\|U_{\mathrm{exata}}\|_2}
+\end{equation*}
+\end{block}
+\end{frame}
+
+\begin{frame}{Resultados - Erro Relativo (Grupo 1)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+$N$ & $k=1$ & $k=20$ & $k=40$ & $k=100$ \\
+\midrule
+64  & \num{6.4e-7} & \num{2.1e-1} & \num{1.1e0} & \num{2.5e0} \\
+128 & \num{1.6e-7} & \num{4.2e-2} & \num{2.8e-1} & \num{1.5e0} \\
+192 & \num{7.2e-8} & \num{1.9e-2} & \num{2.1e-1} & \num{1.3e0} \\
+256 & \num{4.1e-8} & \num{1.0e-2} & \num{1.7e-1} & \num{3.6e0} \\
+\bottomrule
+\end{tabular}
+\caption{Erro relativo L2 para diferentes malhas e números de onda}
+\end{table}
+\end{frame}
+
+\begin{frame}{Análise de Convergência}
+\begin{block}{Comportamento}
+\begin{itemize}
+\item $k=1$: erro diminui com $h^2$ (ordem 2 confirmada)
+\item $k=20, 40$: convergência mais lenta ($p \approx 1.5-1.8$)
+\item $k=100$: requer $N \geq 256$ ($p < 1$)
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Regra}
+$N_{\lambda} = \frac{2\pi N}{k} \gtrsim 10-20$ pontos por comprimento de onda
+\end{block}
+\end{frame}
+
+\begin{frame}{Taxa de Convergência}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$k$ & Taxa Observada & Esperado \\
+\midrule
+1   & $\approx 2.0$ & 2.0 (ordem 2) \\
+20  & $\approx 1.5-1.8$ & 2.0 (degradado) \\
+40  & $\approx 1.2-1.5$ & 2.0 (degradado) \\
+100 & $\approx 0.5-1.0$ & 2.0 (poluição numérica) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.2cm}
+
+\begin{alertblock}{Observação}
+Para $k$ grande, a taxa degrada devido à poluição numérica.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Comparação entre Grupos ($N=256$)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Grupo & $k=1$ & $k=20$ & $k=40$ & $k=100$ \\
+\midrule
+1 & \num{4.1e-8} & \num{1.0e-2} & \num{1.7e-1} & \num{3.6e0} \\
+2 & \num{4.2e-8} & \num{1.4e-2} & \num{3.1e-2} & \num{2.4e0} \\
+3 & \num{3.4e-8} & \num{1.3e-2} & \num{1.8e-1} & \num{8.3e-1} \\
+\bottomrule
+\end{tabular}
+\caption{Erro relativo L2 para $N=256$}
+\end{table}
+\end{frame}
+
+\begin{frame}{Desempenho Computacional}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+$N$ & Incógnitas & Build (s) & Solve (s) & Solver \\
+\midrule
+64  & 3,969  & 0.001 & 0.008 & SPLU \\
+128 & 16,129 & 0.003 & 0.039 & SPLU \\
+192 & 36,481 & 0.006 & 0.117 & SPLU \\
+256 & 65,025 & 0.012 & 0.423 & GMRES+ILU \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Otimizações Implementadas}
+\begin{block}{Técnicas}
+\begin{itemize}
+\item \textbf{Cache}: Reutilização de matrizes (90\% mais rápido)
+\item \textbf{Paralelização}: Processamento paralelo (3-4x mais rápido)
+\item \textbf{Pré-aquecimento}: Construção prévia de estruturas
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Superfície 3D - Efeito de $k$}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k1_N128_real.pdf}
+\caption{$k=1$ - Excelente precisão}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N128_real.pdf}
+\caption{$k=20$ - Boa precisão}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Superfície 3D - Efeito de $k$ (continuação)}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k40_N128_real.pdf}
+\caption{$k=40$ - Degradação}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k100_N256_real.pdf}
+\caption{$k=100$ - Poluição severa}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Cortes 2D - Comparação Numérico vs Exato}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_x05_k20_N128_real.pdf}
+\caption{$k=20$, $N=128$ - Erro: $4.2 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_y05_k20_N128_real.pdf}
+\caption{Cortes em $x=0.5$ e $y=0.5$}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Efeito da Poluição Numérica}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_x05_k20_N128_real.pdf}
+\caption{$k=20$, $N=128$ - Erro: $4.2 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_x05_k100_N128_real.pdf}
+\caption{$k=100$, $N=128$ - Erro: $1.5$ (poluição severa)}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Comparação entre Grupos ($k=20$, $N=128$)}
+\begin{columns}
+\begin{column}{0.33\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N128_real.pdf}
+\caption{Grupo 1 - Erro: $1.0 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\begin{column}{0.33\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_2/surf_k20_N128_real.pdf}
+\caption{Grupo 2 - Erro: $1.4 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\begin{column}{0.33\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_3/surf_k20_N128_real.pdf}
+\caption{Grupo 3 - Erro: $1.3 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Comparação entre Malhas ($k=20$)}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N64_real.pdf}
+\caption{$N=64$ - Erro: $2.1 \times 10^{-1}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N128_real.pdf}
+\caption{$N=128$ - Erro: $4.2 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Comparação entre Malhas ($k=20$, continuação)}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N192_real.pdf}
+\caption{$N=192$ - Erro: $1.9 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k20_N256_real.pdf}
+\caption{$N=256$ - Erro: $1.0 \times 10^{-2}$}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Convergência com Refinamento ($k=1$)}
+\begin{block}{Para $k=1$ (Baixa Frequência)}
+\begin{itemize}
+\item $N=64$: Erro $6.4 \times 10^{-7}$
+\item $N=128$: Erro $1.6 \times 10^{-7}$ (4x menor)
+\item $N=256$: Erro $4.2 \times 10^{-8}$ (15x menor)
+\item Taxa: $p \approx 2.0$ (ordem 2 confirmada)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Convergência com Refinamento ($k=20$)}
+\begin{block}{Para $k=20$ (Frequência Média)}
+\begin{itemize}
+\item $N=64$: Erro $2.1 \times 10^{-1}$ (21\%)
+\item $N=128$: Erro $4.2 \times 10^{-2}$ (4.2\%, 5x menor)
+\item $N=256$: Erro $1.0 \times 10^{-2}$ (1.0\%, 21x menor)
+\item Taxa: $p \approx 1.5-1.8$ (degradada)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Convergência com Refinamento ($k=100$)}
+\begin{block}{Para $k=100$ (Alta Frequência)}
+\begin{itemize}
+\item $N=64$: Erro $2.5$ (250\%)
+\item $N=128$: Erro $1.5$ (150\%)
+\item $N=256$: Erro $3.6$ (360\%, piora!)
+\item Taxa: $p < 1$ (poluição numérica severa)
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{alertblock}{Observação}
+Para $k=100$, mesmo com refinamento, o erro permanece alto.
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Análise para $k=100$}
+\begin{block}{Resultados}
+\begin{itemize}
+\item $N=60$: Erro $> 1.0$ (poluição severa)
+\item $N=256$: Erro $\sim 3.6$ (ainda alto)
+\item $N_{\lambda} \approx 16$ para $N=256$ (marginal)
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Requisito}
+Requer $N_{\lambda} \geq 20-30$ para precisão aceitável
+\end{block}
+\end{frame}
+
+\begin{frame}{Resumo - Erros por $k$ ($N=128$)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$k$ & Erro Relativo & Observação \\
+\midrule
+1   & \num{1.6e-7} & Excelente precisão \\
+20  & \num{4.2e-2} & Boa precisão \\
+40  & \num{2.8e-1} & Degradação \\
+100 & \num{1.5e0} & Poluição severa \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Resumo - Erros por Malha ($k=20$)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$N$ & Erro Relativo & Redução \\
+\midrule
+64  & \num{2.1e-1} & -- \\
+128 & \num{4.2e-2} & 5x menor \\
+192 & \num{1.9e-2} & 11x menor \\
+256 & \num{1.0e-2} & 21x menor \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Comparação - Efeito do Refinamento}
+\begin{block}{Observação}
+O refinamento da malha melhora significativamente a precisão, especialmente para valores médios de $k$.
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Exemplo: $k=20$}
+\begin{itemize}
+\item $N=64$: Erro $2.1 \times 10^{-1}$ (21\%)
+\item $N=128$: Erro $4.2 \times 10^{-2}$ (4.2\%)
+\item $N=256$: Erro $1.0 \times 10^{-2}$ (1.0\%)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Comparação entre Grupos - Análise}
+\begin{block}{Para $k=20$ ($N=128$)}
+\begin{itemize}
+\item \textbf{Grupo 1}: Erro $1.0 \times 10^{-2}$ (melhor)
+\item \textbf{Grupo 2}: Erro $1.4 \times 10^{-2}$ (40\% maior)
+\item \textbf{Grupo 3}: Erro $1.3 \times 10^{-2}$ (30\% maior)
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Observação}
+Diferenças pequenas mas significativas devido à direção das ondas planas.
+\end{block}
+\end{frame}
+
+\begin{frame}{Cortes 2D - $k=1$ vs $k=100$}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_x05_k1_N128_real.pdf}
+\caption{$k=1$, $N=128$ - Erro: $1.6 \times 10^{-7}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/cut_x05_k100_N128_real.pdf}
+\caption{$k=100$, $N=128$ - Erro: $1.5$ (poluição severa)}
+\end{figure}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Comparação - Malhas para $k=40$}
+\begin{columns}
+\begin{column}{0.5\textwidth}
+\begin{figure}
+\centering
+\includegraphics[width=\textwidth]{figures/group_1/surf_k40_N128_real.pdf}
+\caption{$N=128$ - Erro: $2.8 \times 10^{-1}$}
+\end{figure}
+\end{column}
+\begin{column}{0.5\textwidth}
+\begin{block}{Observação}
+Para $k=40$, mesmo com $N=128$, o erro é alto ($28\%$), mostrando a necessidade de malhas mais refinadas.
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Resumo Visual - Efeito do Refinamento}
+\begin{block}{Observação}
+Com o refinamento da malha ($N$ aumenta), a solução numérica captura melhor as oscilações, especialmente para valores médios de $k$.
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Para $k=20$}
+\begin{itemize}
+\item $N=64$: Solução "suave", perde detalhes
+\item $N=128$: Melhor captura das oscilações
+\item $N=256$: Excelente captura, alta precisão
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Comparação - Todos os Valores de $k$}
+\begin{block}{Resumo dos Resultados}
+\begin{itemize}
+\item \textbf{$k=1$}: Excelente precisão em todas as malhas (erro $< 10^{-6}$)
+\item \textbf{$k=20$}: Boa precisão com $N \geq 128$ (erro $< 5\%$)
+\item \textbf{$k=40$}: Precisão aceitável apenas com $N \geq 256$ (erro $< 20\%$)
+\item \textbf{$k=100$}: Poluição numérica severa mesmo com $N=256$ (erro $> 300\%$)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Comparação - Todos os Valores de $k$}
+\begin{block}{Resumo dos Resultados}
+\begin{itemize}
+\item \textbf{$k=1$}: Excelente precisão em todas as malhas (erro $< 10^{-6}$)
+\item \textbf{$k=20$}: Boa precisão com $N \geq 128$ (erro $< 5\%$)
+\item \textbf{$k=40$}: Precisão aceitável apenas com $N \geq 256$ (erro $< 20\%$)
+\item \textbf{$k=100$}: Poluição numérica severa mesmo com $N=256$ (erro $> 300\%$)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Resumo - Erros por $k$ ($N=128$)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$k$ & Erro Relativo & Observação \\
+\midrule
+1   & \num{1.6e-7} & Excelente precisão \\
+20  & \num{4.2e-2} & Boa precisão \\
+40  & \num{2.8e-1} & Degradação \\
+100 & \num{1.5e0} & Poluição severa \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Resumo - Erros por Malha ($k=20$)}
+\footnotesize
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+$N$ & Erro Relativo & Redução \\
+\midrule
+64  & \num{2.1e-1} & -- \\
+128 & \num{4.2e-2} & 5x menor \\
+192 & \num{1.9e-2} & 11x menor \\
+256 & \num{1.0e-2} & 21x menor \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{frame}
+
+\begin{frame}{Conclusões dos Resultados}
+\begin{block}{Principais Conclusões}
+\begin{itemize}
+\item MDFC2 é adequado para $k \leq 20$
+\item Taxa de convergência $p \approx 2.0$ para $k$ pequeno
+\item Poluição numérica limita eficiência para $k$ grande
+\item Refinamento de malha essencial para $k$ médio/grande
+\end{itemize}
+\end{block}
+\end{frame}

@@ -1,0 +1,143 @@
+% Seção 2: Metodologia
+
+\section{Metodologia}
+
+\begin{frame}{Discretização da Equação de Helmholtz}
+\begin{block}{Aplicando MDFC2}
+Aplicando o Método das Diferenças Finitas Centradas de Segunda Ordem no domínio $\Omega = [0,1]^2$:
+\begin{equation*}
+\frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{h^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{h^2} + k^2 u_{i,j} = 0
+\end{equation*}
+\end{block}
+\end{frame}
+
+\begin{frame}{Sistema Linear Resultante}
+\begin{block}{Forma Matricial}
+Resultando em um sistema linear esparso:
+\begin{equation*}
+A \mathbf{u} = \mathbf{b}
+\end{equation*}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Componentes}
+\begin{itemize}
+\item $A$: Matriz esparsa $(N-1)^2 \times (N-1)^2$
+\item $\mathbf{u}$: Vetor de incógnitas (valores nos pontos internos)
+\item $\mathbf{b}$: Vetor com contribuições das condições de contorno Dirichlet
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Desafio Computacional}
+\begin{block}{Problema}
+Para capturar a física em $k = 100$, a malha deve ser fina ($N > 200$).
+\begin{itemize}
+\item $N = 200 \Rightarrow 40.000$ incógnitas
+\item Matriz densa: $\approx 12$ GB de RAM (inviável/lento)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Solução: Matrizes Esparsas}
+\begin{block}{Vantagens}
+\begin{itemize}
+\item \textbf{Formato LIL/CSC}: Armazena apenas elementos não-zero
+\item \textbf{Consumo de memória}: Irrisório comparado à matriz densa
+\item \textbf{Implementação}: Utilizando \texttt{scipy.sparse}
+\end{itemize}
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Montagem Eficiente}
+\begin{itemize}
+\item Montagem da matriz em formato LIL (List of Lists)
+\item Conversão para CSC (Compressed Sparse Column) para solução
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Sistema Linear}
+\begin{block}{Forma Matricial}
+O problema discretizado resulta em um sistema linear esparso:
+\begin{equation*}
+A \mathbf{u} = \mathbf{b}
+\end{equation*}
+onde:
+\begin{itemize}
+\item $A = L + k^2 I$ (matriz esparsa $(N-1)^2 \times (N-1)^2$)
+\item $L$ é a discretização do Laplaciano (estrutura de banda)
+\item $\mathbf{b}$ contém as contribuições das condições de contorno Dirichlet
+\item Estrutura esparsa: apenas 5 diagonais não-nulas
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{Propriedades da Matriz}
+\begin{itemize}
+\item \textbf{Simétrica}: Para condições de contorno apropriadas
+\item \textbf{Definida positiva}: Para $k$ real (garante solução única)
+\item \textbf{Condicionamento}: Piora com $k$ grande (requer métodos iterativos)
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Solvers Implementados}
+\begin{block}{SPLU - Método Direto}
+\begin{itemize}
+\item Fatoração LU esparsa (direto)
+\item Eficiente para sistemas pequenos/médios ($N \leq 192$)
+\item Custo: $O(N^3)$ operações, $O(N^2)$ memória
+\end{itemize}
+\end{block}
+
+\vspace{0.2cm}
+
+\begin{block}{GMRES+ILU - Método Iterativo}
+\begin{itemize}
+\item Método iterativo com pré-condicionador
+\item Eficiente para sistemas grandes ($N \geq 256$)
+\item Custo: $O(N^2)$ por iteração, convergência rápida
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Seleção Automática e Robustez}
+\begin{block}{Modo Auto}
+Escolhe automaticamente o solver baseado no tamanho do sistema.
+\end{block}
+
+\vspace{0.3cm}
+
+\begin{block}{Tratamento de Singularidades}
+\begin{itemize}
+\item Fallback automático quando ILU falha
+\item Uso de SPLU ou GMRES sem pré-condicionador como alternativa
+\item Garante robustez para todos os casos
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Solução Exata para Validação}
+\begin{block}{Superposição de Ondas Planas}
+Para validação e cálculo de erro, utilizamos solução exata imposta como condição de Dirichlet na fronteira $\Gamma$:
+\begin{equation*}
+u_{\text{exata}}(x, y) = \sum_{i=1}^{3} \cos\left(k (x \cos \theta_i + y \sin \theta_i)\right)
+\end{equation*}
+com ângulos: $\Theta = \{0, \pi/8, \pi/4\}$
+\end{block}
+\end{frame}
+
+\begin{frame}{Parâmetros de Teste}
+\begin{block}{Configuração do Experimento}
+\begin{itemize}
+\item Malhas: $N \in \{64, 128, 192, 256\}$ (extendido para análise completa)
+\item Números de onda: $k \in \{1, 20, 40, 100\}$
+\item Validação inicial: $N = 60$ (conforme trabalho original)
+\item Total: $6 \times 4 \times 4 = 96$ casos (extensão do trabalho)
+\end{itemize}
+\end{block}
+\end{frame}

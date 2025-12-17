@@ -1,0 +1,79 @@
+% Seção 4: Conclusões
+
+\section{Conclusões}
+
+\begin{frame}{Conclusões - Resultados Principais}
+\begin{block}{Principais Conclusões}
+\begin{itemize}
+\item O MDFC2 é adequado para baixos valores de $k$ ($k \leq 20$)
+\item Taxa de convergência confirma ordem 2 para $k$ pequeno ($p \approx 2.0$)
+\item O efeito de poluição numérica limita a eficiência para $k$ grande
+\item Métodos de ordem superior reduzem esse efeito (perspectiva futura)
+\item IA mostrou-se útil como suporte acadêmico
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Conclusões - Limitações Identificadas}
+\begin{block}{Limitações do Método}
+\begin{itemize}
+\item \textbf{Poluição numérica}: Mesmo com refinamento, erro cresce com $k$ grande
+\item \textbf{Requisito de malha}: Para $k=100$, necessário $N_{\lambda} \geq 20-30$ pontos/comprimento de onda
+\item \textbf{Custo computacional}: Cresce com $N^2$ (sistemas grandes requerem métodos iterativos)
+\item \textbf{Precisão limitada}: Erro relativo $> 1.0$ para $k=100$ com $N=60$
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Validação - Conformidade com Teoria}
+\begin{block}{Validação Numérica}
+\begin{itemize}
+\item \textbf{Consistência}: Erro de truncamento $O(h^2)$ confirmado numericamente
+\item \textbf{Convergência}: Taxa experimental $p \approx 2.0$ para $k$ pequeno (conforme esperado)
+\item \textbf{Estabilidade}: Sistema bem-condicionado para $k$ pequeno/médio
+\item \textbf{Precisão}: Erros relativos da ordem de $10^{-7}$ a $10^{-8}$ para $k=1$
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Validação - Comparação com Literatura}
+\begin{block}{Consistência com Literatura}
+\begin{itemize}
+\item Resultados consistentes com trabalhos sobre diferenças finitas para Helmholtz
+\item Comportamento de poluição numérica observado conforme esperado
+\item Requisitos de malha ($N_{\lambda} \geq 10-20$) alinhados com literatura
+\item Taxa de convergência degradada para $k$ grande documentada
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Perspectivas Futuras - Melhorias Metodológicas}
+\begin{block}{Melhorias Propostas}
+\begin{itemize}
+\item \textbf{Métodos de alta ordem}: 4ª ou 6ª ordem para reduzir poluição numérica
+\item \textbf{Métodos híbridos}: Combinação de diferentes abordagens
+\item \textbf{Malhas adaptativas}: Refinamento local onde necessário
+\item \textbf{Pré-condicionadores especializados}: Otimizados para equação de Helmholtz
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Perspectivas Futuras - Integração com IA}
+\begin{block}{Aplicações de IA}
+\begin{itemize}
+\item \textbf{IA + Métodos Numéricos}: Uso de IA para otimização de parâmetros
+\item \textbf{Seleção automática de métodos}: IA sugere melhor método para cada caso
+\item \textbf{Análise preditiva}: IA prevê comportamento numérico antes da execução
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}{Perspectivas Futuras - Extensões}
+\begin{block}{Trabalhos Futuros}
+\begin{itemize}
+\item \textbf{Problemas 3D}: Generalização para domínios tridimensionais
+\item \textbf{Condições de contorno avançadas}: Robin, Neumann, PML
+\item \textbf{Comparação sistemática}: Elementos finitos, métodos espectrais
+\end{itemize}
+\end{block}
+\end{frame}
