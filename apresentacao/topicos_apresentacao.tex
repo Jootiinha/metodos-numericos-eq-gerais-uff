@@ -15,422 +15,84 @@
 
 \section*{INTRODUÇÃO}
 
-\begin{itemize}
-    \item \textbf{Equação de Helmholtz}: $\nabla^2 u + k^2 u = 0$ em $\Omega = [0,1]^2$
-    \begin{itemize}
-        \item Equação diferencial parcial elíptica
-        \item Surge da equação da onda com solução harmônica no tempo
-        \item Modela fenômenos ondulatórios em regime harmônico
-    \end{itemize}
-    
-    \item \textbf{Interpretação dos termos}:
-    \begin{itemize}
-        \item $\nabla^2 u$: Operador Laplaciano — mede a curvatura espacial da solução
-        \item $k^2 u$: Termo reativo — impõe caráter oscilatório
-        \item $u(x,y)$: Campo escalar desconhecido que queremos determinar
-    \end{itemize}
-    
-    \item \textbf{Número de onda $k$}:
-    \begin{itemize}
-        \item Relacionado à frequência espacial: $k = \omega/c$
-        \item Quanto maior $k$, maior a frequência espacial
-        \item Valores testados: $k = 1, 20, 40, 100$
-        \item Para $k$ grande, requer malhas mais refinadas
-    \end{itemize}
-    
-    \item \textbf{Aplicações práticas}:
-    \begin{itemize}
-        \item Acústica arquitetônica
-        \item Propagação eletromagnética
-        \item Vibrações mecânicas
-        \item Difração e espalhamento de ondas
-    \end{itemize}
-    
-    \item \textbf{Objetivo do trabalho}:
-    \begin{itemize}
-        \item Aplicar o Método das Diferenças Finitas Centradas de Segunda Ordem (MDFC2)
-        \item Analisar efeitos numéricos, especialmente poluição numérica
-        \item Investigar influência do número de onda $k$
-        \item Avaliar uso de IA como ferramenta auxiliar
-    \end{itemize}
-\end{itemize}
+Apresentar a equação de Helmholtz bidimensional: $\nabla^2 u + k^2 u = 0$ no domínio $\Omega = [0,1]^2$. Esta é uma equação diferencial parcial elíptica fundamental que surge naturalmente da equação da onda quando assumimos soluções harmônicas no tempo. O termo $\nabla^2 u$ representa o Laplaciano, que mede a curvatura espacial da solução, enquanto $k^2 u$ é o termo reativo que impõe o caráter oscilatório característico de fenômenos ondulatórios. Destacar as aplicações práticas: acústica arquitetônica, propagação eletromagnética, vibrações mecânicas e difração de ondas. O número de onda $k$ está relacionado à frequência espacial através de $k = \omega/c$, e quanto maior o valor de $k$, maior a frequência espacial, exigindo malhas mais refinadas para capturar adequadamente as oscilações. O objetivo do trabalho é aplicar o Método das Diferenças Finitas Centradas de Segunda Ordem, conhecido como MDFC2, à equação de Helmholtz bidimensional e analisar seus efeitos numéricos, especialmente o fenômeno de poluição numérica que ocorre para valores grandes de $k$.
 
-\section*{METODOLOGIA}
+\section*{MÉTODOS E IMPLEMENTAÇÃO COMPUTACIONAL}
 
-\begin{itemize}
-    \item \textbf{Parâmetro $N$ — Refinamento da malha}:
-    \begin{itemize}
-        \item $N$: número de subintervalos em cada direção do domínio $[0,1]^2$
-        \item Malha uniforme: dividimos $[0,1]$ em $N$ partes iguais
-        \item Tamanho do passo: $h = 1/N$
-        \item Total de pontos da malha: $(N+1) \times (N+1)$ pontos
-        \item Pontos internos (incógnitas): $(N-1) \times (N-1) = (N-1)^2$ incógnitas
-        \item Valores testados: $N = 64, 128, 192, 256$
-        \item Exemplo: $N=64$ $\Rightarrow$ $h = 1/64 = 0.015625$, $63 \times 63 = 3.969$ incógnitas
-        \item Exemplo: $N=256$ $\Rightarrow$ $h = 1/256 = 0.00390625$, $255 \times 255 = 65.025$ incógnitas
-    \end{itemize}
-    
-    \item \textbf{Discretização MDFC2 (Método das Diferenças Finitas Centradas de 2ª Ordem)}:
-    \begin{itemize}
-        \item Stencil de 5 pontos: centro + 4 vizinhos (norte, sul, leste, oeste)
-        \item Equação discretizada:
-        \begin{equation*}
-        \frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{h^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{h^2} + k^2 u_{i,j} = 0
-        \end{equation*}
-        \item Primeiro termo: discretização de $\frac{\partial^2 u}{\partial x^2}$
-        \item Segundo termo: discretização de $\frac{\partial^2 u}{\partial y^2}$
-        \item Terceiro termo: termo reativo $k^2 u$ avaliado no ponto $(i,j)$
-    \end{itemize}
-    
-    \item \textbf{Sistema linear resultante}:
-    \begin{itemize}
-        \item Forma: $A\mathbf{u} = \mathbf{b}$
-        \item Matriz $A = L + k^2 I$, onde $L$ é o Laplaciano discreto
-        \item Dimensão: $(N-1)^2 \times (N-1)^2$
-        \item Matriz esparsa: apenas 5 diagonais não-nulas
-        \item Vetor $\mathbf{b}$: construído a partir das condições de contorno Dirichlet
-    \end{itemize}
-    
-    \item \textbf{Matrizes esparsas — Formatos}:
-    \begin{itemize}
-        \item \textbf{LIL (List of Lists)}: formato usado para montagem eficiente da matriz
-        \begin{itemize}
-            \item Permite inserção rápida de elementos
-            \item Ideal para construção da matriz
-        \end{itemize}
-        \item \textbf{CSC (Compressed Sparse Column)}: formato usado para solução
-        \begin{itemize}
-            \item Otimizado para operações de álgebra linear
-            \item Usado pelo \texttt{scipy.sparse} para solvers
-            \item Conversão LIL $\to$ CSC após montagem
-        \end{itemize}
-        \item Vantagem: memória irrisória comparada à matriz densa
-        \item Exemplo: $N=200$ $\Rightarrow$ matriz densa $\approx 12$ GB RAM (inviável)
-        \item Com esparsidade: apenas algumas dezenas de MB
-    \end{itemize}
-    
-    \item \textbf{Solvers implementados — Métodos de solução do sistema linear}:
-    
-    \begin{itemize}
-        \item \textbf{SPLU — Sparse LU (Fatoração LU Esparsa)}:
-        \begin{itemize}
-            \item Nome completo: \texttt{scipy.sparse.linalg.splu}
-            \item Tipo: Método direto (resolve exatamente, sem iterações)
-            \item Processo:
-            \begin{enumerate}
-                \item Fatora a matriz $A$ em $A = LU$ (Lower-Upper)
-                \item Resolve $Ly = b$ (substituição progressiva)
-                \item Resolve $Ux = y$ (substituição regressiva)
-            \end{enumerate}
-            \item Eficiente para: $N \leq 192$ (até $\sim 40.000$ incógnitas)
-            \item Complexidade: $O(N^3)$ operações, $O(N^2)$ memória
-            \item Vantagem: solução exata, sem erro de iteração
-            \item Desvantagem: custo cresce rapidamente com $N$
-        \end{itemize}
-        
-        \item \textbf{GMRES+ILU — Generalized Minimal Residual com pré-condicionador ILU}:
-        \begin{itemize}
-            \item \textbf{GMRES}: \texttt{scipy.sparse.linalg.gmres}
-            \begin{itemize}
-                \item Nome completo: Generalized Minimal Residual Method
-                \item Tipo: Método iterativo (aproximações sucessivas)
-                \item Ideia: encontra solução no espaço de Krylov
-                \item Minimiza resíduo $\|b - Ax\|_2$ em cada iteração
-                \item Parâmetros: restart=100, maxiter=1000
-                \item Tolerâncias: rtol=$10^{-8}$, atol=$10^{-12}$
-            \end{itemize}
-            \item \textbf{ILU}: \texttt{scipy.sparse.linalg.spilu}
-            \begin{itemize}
-                \item Nome completo: Incomplete LU Factorization
-                \item Tipo: Pré-condicionador (melhora convergência do GMRES)
-                \item Processo: fatora $A \approx LU$ de forma incompleta (mais rápida)
-                \item Parâmetros: drop\_tol=$10^{-3}$, fill\_factor=$20$
-                \item Função: acelera convergência do GMRES
-            \end{itemize}
-            \item Eficiente para: $N \geq 256$ (sistemas grandes)
-            \item Complexidade: $O(N^2)$ por iteração
-            \item Vantagem: escalável para sistemas muito grandes
-            \item Desvantagem: pode não convergir se mal condicionado
-        \end{itemize}
-        
-        \item \textbf{Seleção automática (modo "auto")}:
-        \begin{itemize}
-            \item Heurística: escolhe solver baseado no tamanho do sistema
-            \item Se $n \leq 40.000$ incógnitas: usa SPLU
-            \item Se $n > 40.000$ incógnitas: usa GMRES+ILU
-            \item Estratégia de fallback robusta:
-            \begin{itemize}
-                \item Se ILU falha e $n \leq 100.000$: tenta SPLU
-                \item Se ILU falha e $n > 100.000$: usa GMRES sem pré-condicionador
-            \end{itemize}
-            \item Garante solução para todos os casos
-        \end{itemize}
-    \end{itemize}
-    
-    \item \textbf{Solução exata para validação}:
-    \begin{itemize}
-        \item Forma: $u_{\text{exata}} = \sum_{i=1}^{3} \cos(k(x\cos\theta_i + y\sin\theta_i))$
-        \item Superposição de 3 ondas planas
-        \item Cada onda tem direção definida pelo ângulo $\theta_i$
-        \item Imposta como condição de Dirichlet na fronteira
-        \item Permite calcular erro exato: $u_{\text{num}} - u_{\text{exata}}$
-    \end{itemize}
-    
-    \item \textbf{6 grupos de testes}:
-    \begin{itemize}
-        \item Cada grupo tem diferentes combinações de ângulos $\Theta = \{\theta_1, \theta_2, \theta_3\}$
-        \item Grupo 1: $\Theta = \{0, \pi/8, \pi/4\}$
-        \item Grupo 2: $\Theta = \{\pi/16, \pi/8, 3\pi/16\}$
-        \item Grupo 3: $\Theta = \{\pi/8, 3\pi/16, \pi/4\}$
-        \item Grupos 4, 5, 6: outras combinações
-        \item Permite análise abrangente do comportamento do método
-    \end{itemize}
-    
-    \item \textbf{Otimizações implementadas}:
-    \begin{itemize}
-        \item \textbf{Cache de matrizes}: reutiliza matrizes Laplacianas para mesmo $N$
-        \item Ganho: $\sim 90\%$ mais rápido na construção
-        \item \textbf{Paralelização}: processamento paralelo de múltiplos casos
-        \item Ganho: 3-4 vezes mais rápido
-        \item \textbf{Pré-aquecimento}: construção prévia de estruturas
-    \end{itemize}
-\end{itemize}
+\subsection*{Discretização MDFC2}
+
+O parâmetro $N$ representa o número de subintervalos em cada direção do domínio $[0,1]^2$. Testamos valores de $N = 64, 128, 192, 256$. O tamanho do passo é dado por $h = 1/N$, e temos $(N+1) \times (N+1)$ pontos totais na malha, sendo $(N-1)^2$ pontos internos que constituem as incógnitas do sistema. Por exemplo, para $N=256$, temos $h = 1/256 = 0.00390625$ e $255 \times 255 = 65.025$ incógnitas.
+
+A discretização utiliza um stencil de 5 pontos, onde cada ponto interno está conectado ao seu centro e aos quatro vizinhos (norte, sul, leste, oeste). A equação discretizada é:
+\begin{equation*}
+\frac{u_{i+1,j} - 2u_{i,j} + u_{i-1,j}}{h^2} + \frac{u_{i,j+1} - 2u_{i,j} + u_{i,j-1}}{h^2} + k^2 u_{i,j} = 0
+\end{equation*}
+O primeiro termo discretiza $\frac{\partial^2 u}{\partial x^2}$, o segundo discretiza $\frac{\partial^2 u}{\partial y^2}$, e o terceiro é o termo reativo $k^2 u$ avaliado no ponto $(i,j)$.
+
+Esta discretização resulta em um sistema linear esparso da forma $A\mathbf{u} = \mathbf{b}$, onde a matriz $A = L + k^2 I$ tem dimensão $(N-1)^2 \times (N-1)^2$ e possui apenas 5 diagonais não-nulas devido à estrutura do stencil. O vetor $\mathbf{b}$ é construído a partir das condições de contorno Dirichlet impostas na fronteira do domínio.
+
+\subsection*{Implementação com Matrizes Esparsas}
+
+Para $N=200$, teríamos aproximadamente 40.000 incógnitas, e uma matriz densa ocuparia cerca de 12 GB de RAM, tornando a solução inviável em computadores típicos. A solução é o uso de matrizes esparsas. Utilizamos dois formatos principais: o formato LIL (List of Lists) para a montagem eficiente da matriz, que permite inserção rápida de elementos durante a construção e é ideal para montar a matriz Laplaciana. Após a montagem, convertemos para o formato CSC (Compressed Sparse Column), que é otimizado para operações de álgebra linear e é usado pelos solvers do \texttt{scipy.sparse}. Esta conversão é automática e resulta em uma redução drástica de memória: de 12 GB para apenas algumas dezenas de MB.
+
+\subsection*{Sistema de Cache — Otimização Crítica}
+
+Ao testar múltiplos grupos com o mesmo valor de $N$, reconstruir as matrizes Laplacianas e as coordenadas da malha para cada caso seria extremamente custoso. Por exemplo, para $N=128$ testando 6 grupos e 4 valores diferentes de $k$, teríamos 24 casos. Sem cache, isso significaria 24 construções da matriz Laplaciana, todas idênticas. Com cache, fazemos apenas 1 construção e reutilizamos 23 vezes.
+
+A implementação do cache utiliza dois dicionários globais. O primeiro, \texttt{\_laplacian\_cache}, armazena as matrizes Laplacianas, onde a chave é o valor de $N$ e o valor é uma tupla $(L, h)$ contendo a matriz Laplaciana $L$ já no formato CSC otimizado e o passo $h$. O segundo dicionário, \texttt{\_coords\_cache}, armazena as coordenadas da malha, onde a chave é novamente $N$ e o valor é a tupla $(x, y, X, Y)$ com as coordenadas, evitando recálculos custosos de \texttt{np.linspace} e \texttt{np.meshgrid}.
+
+A lógica de funcionamento é a seguinte: cada função que constrói estruturas recebe o parâmetro $N$ e uma flag \texttt{use\_cache}. Primeiro, verifica se $N$ já existe no dicionário de cache. Se existe, retorna imediatamente do cache com acesso O(1), que é praticamente instantâneo. Se não existe, constrói a estrutura, armazena no cache para uso futuro e retorna. Além disso, implementamos um pré-aquecimento do cache: antes de processar qualquer caso, construímos todas as estruturas para todos os valores de $N$ que serão testados, garantindo que a primeira chamada durante o processamento já utilize o cache.
+
+Os ganhos de performance são significativos: a construção de matrizes fica aproximadamente 90\% mais rápida. Por exemplo, a construção da matriz $L$ para $N=256$ cai de aproximadamente 0.012 segundos para 0.001 segundos após o cache estar aquecido. A mesma matriz $L$ é reutilizada para todos os grupos com o mesmo $N$, independentemente do valor de $k$ ou da configuração de ângulos. Esta eficiência é especialmente importante ao testar múltiplos grupos e valores de $k$.
+
+Em um cenário completo com 6 grupos, 4 valores de $k$ e 4 valores de $N$, temos um total de 96 casos a processar. Sem cache, isso resultaria em 96 construções da matriz Laplaciana. Com cache, fazemos apenas 4 construções (uma para cada valor de $N$) e 92 reutilizações, resultando em uma economia de aproximadamente 96\% de redução no tempo de construção das matrizes.
+
+\subsection*{Solvers Implementados}
+
+O solver SPLU (Sparse LU) é uma fatoração LU esparsa implementada pela função \texttt{scipy.sparse.linalg.splu}. Este é um método direto que fornece solução exata sem iterações. O processo consiste em três etapas: primeiro, fatora a matriz $A$ em $A = LU$ através de uma decomposição Lower-Upper; depois, resolve $Ly = b$ usando substituição progressiva (forward substitution); finalmente, resolve $Ux = y$ usando substituição regressiva (backward substitution). Este método é eficiente para sistemas menores, especificamente para $N \leq 192$, o que corresponde a aproximadamente 40.000 incógnitas. A complexidade é $O(N^3)$ para a fatoração e $O(N^2)$ para a resolução, com memória de $O(N^2)$. A vantagem é que fornece solução exata e determinística, mas a desvantagem é que o custo cresce rapidamente com $N$.
+
+O solver GMRES+ILU combina o método iterativo GMRES (Generalized Minimal Residual) com um pré-condicionador ILU (Incomplete LU Factorization). O GMRES, implementado por \texttt{scipy.sparse.linalg.gmres}, é um método iterativo que encontra a solução no espaço de Krylov e minimiza o resíduo $\|b - Ax\|_2$ em cada iteração. Utilizamos parâmetros restart=100 e maxiter=1000, com tolerâncias rtol=$10^{-8}$ e atol=$10^{-12}$. O ILU, implementado por \texttt{scipy.sparse.linalg.spilu}, é um pré-condicionador que fatora $A \approx LU$ de forma incompleta, sendo mais rápido que uma fatoração completa mas ainda eficaz em acelerar a convergência do GMRES. Utilizamos parâmetros drop\_tol=$10^{-3}$ e fill\_factor=$20$. Este método é eficiente para sistemas grandes, especificamente para $N \geq 256$, com complexidade $O(N^2)$ por iteração. A vantagem é que é escalável para sistemas muito grandes, mas a desvantagem é que pode não convergir se o sistema estiver mal condicionado.
+
+A seleção automática implementada através do modo "auto" utiliza uma heurística que escolhe o solver baseado no tamanho do sistema: se temos $n \leq 40.000$ incógnitas, usa SPLU; se $n > 40.000$, usa GMRES+ILU. Além disso, implementamos uma estratégia de fallback robusta: se o ILU falha e $n \leq 100.000$, tenta usar SPLU como alternativa; se o ILU falha e $n > 100.000$, usa GMRES sem pré-condicionador como último recurso. Esta estratégia garante que sempre obtemos uma solução, mesmo em casos problemáticos.
+
+\subsection*{Paralelização}
+
+A implementação de paralelização utiliza \texttt{multiprocessing.Pool}, que permite processar múltiplos casos simultaneamente em diferentes núcleos do processador. Esta otimização resulta em um ganho de 3 a 4 vezes no tempo total de processamento, sendo especialmente útil ao processar os 96 casos do cenário completo (6 grupos $\times$ 4 valores de $k$ $\times$ 4 valores de $N$).
 
 \section*{RESULTADOS PRINCIPAIS}
 
 \subsection*{Quantificação do Erro}
 
-\begin{itemize}
-    \item \textbf{Norma $L^2(\Omega)$ integral}:
-    \begin{itemize}
-        \item Definição: $\|u\|_{L^2(\Omega)}^2 = \int_\Omega |u(x,y)|^2 \, dx \, dy$
-        \item Erro relativo: $E_{L^2} = \frac{\|u_{\text{aprox}} - u_{\text{exata}}\|_{L^2(\Omega)}}{\|u_{\text{exata}}\|_{L^2(\Omega)}}$
-    \end{itemize}
-    
-    \item \textbf{Aproximação discreta pela regra do retângulo}:
-    \begin{itemize}
-        \item $\|u\|_{L^2(\Omega)}^2 \approx h^2 \sum_{i,j} |u_{i,j}|^2 = h^2 \|\mathbf{u}\|_2^2$
-        \item Portanto: $\|u\|_{L^2(\Omega)} \approx h \|\mathbf{u}\|_2$
-        \item Erro calculado: $E_{L^2} \approx \frac{h \|\mathbf{U}_{\text{aprox}} - \mathbf{U}_{\text{exata}}\|_2}{h \|\mathbf{U}_{\text{exata}}\|_2}$
-        \item Justificativa: aproximação de ordem $O(h^2)$, consistente com ordem do método
-    \end{itemize}
-\end{itemize}
+O erro relativo foi quantificado utilizando a norma $L^2(\Omega)$ integral, definida como $\|u\|_{L^2(\Omega)}^2 = \int_\Omega |u(x,y)|^2 \, dx \, dy$. O erro relativo é então calculado como $E_{L^2} = \frac{\|u_{\text{aprox}} - u_{\text{exata}}\|_{L^2(\Omega)}}{\|u_{\text{exata}}\|_{L^2(\Omega)}}$. Aproximamos esta norma integral utilizando a regra do retângulo em malha uniforme: $\|u\|_{L^2(\Omega)}^2 \approx h^2 \sum_{i,j} |u_{i,j}|^2 = h^2 \|\mathbf{u}\|_2^2$. Portanto, temos $\|u\|_{L^2(\Omega)} \approx h \|\mathbf{u}\|_2$, e o erro calculado é $E_{L^2} \approx \frac{h \|\mathbf{U}_{\text{aprox}} - \mathbf{U}_{\text{exata}}\|_2}{h \|\mathbf{U}_{\text{exata}}\|_2}$. Esta aproximação tem ordem $O(h^2)$, sendo consistente com a ordem do método de diferenças finitas de segunda ordem.
 
-\subsection*{Resultados por número de onda $k$}
+\subsection*{Resultados por Número de Onda $k$}
 
-\begin{itemize}
-    \item \textbf{$k=1$ (baixa frequência)}:
-    \begin{itemize}
-        \item Erro relativo: $10^{-7}$ a $10^{-8}$ (excelente precisão)
-        \item Taxa de convergência: $p \approx 2.0$ (ordem 2 confirmada)
-        \item Comportamento: método funciona perfeitamente
-        \item Exemplos:
-        \begin{itemize}
-            \item $N=64$: erro $6.4 \times 10^{-7}$
-            \item $N=128$: erro $1.6 \times 10^{-7}$ (4x menor)
-            \item $N=256$: erro $4.1 \times 10^{-8}$ (15x menor)
-        \end{itemize}
-    \end{itemize}
-    
-    \item \textbf{$k=20$ (frequência média)}:
-    \begin{itemize}
-        \item Erro relativo: $4.2 \times 10^{-2}$ para $N=128$ (4.2\%)
-        \item Taxa de convergência: $p \approx 1.5-1.8$ (degradada)
-        \item Comportamento: início do efeito de poluição numérica
-        \item Exemplos:
-        \begin{itemize}
-            \item $N=64$: erro $2.1 \times 10^{-1}$ (21\%)
-            \item $N=128$: erro $4.2 \times 10^{-2}$ (4.2\%, 5x menor)
-            \item $N=256$: erro $1.0 \times 10^{-2}$ (1.0\%, 21x menor)
-        \end{itemize}
-    \end{itemize}
-    
-    \item \textbf{$k=40$ (alta frequência)}:
-    \begin{itemize}
-        \item Erro relativo: $2.8 \times 10^{-1}$ para $N=128$ (28\%)
-        \item Taxa de convergência: $p \approx 1.2-1.5$ (degradada)
-        \item Comportamento: degradação significativa
-        \item Requer $N \geq 256$ para precisão aceitável
-    \end{itemize}
-    
-    \item \textbf{$k=100$ (muito alta frequência)}:
-    \begin{itemize}
-        \item Erro relativo: $> 1.0$ (poluição numérica severa)
-        \item Taxa de convergência: $p < 1$ (muito degradada)
-        \item Comportamento: erro pode ultrapassar $300\%$
-        \item Exemplos:
-        \begin{itemize}
-            \item $N=64$: erro $2.5$ (250\%)
-            \item $N=128$: erro $1.5$ (150\%)
-            \item $N=256$: erro $3.6$ (360\%, piora!)
-        \end{itemize}
-        \item Mesmo com refinamento, erro permanece alto
-    \end{itemize}
-\end{itemize}
+Para $k=1$ (baixa frequência), obtivemos excelente precisão com erros relativos da ordem de $10^{-7}$ a $10^{-8}$. A taxa de convergência observada foi $p \approx 2.0$, confirmando a ordem teórica do método. Especificamente, para $N=64$ temos erro de $6.4 \times 10^{-7}$, para $N=128$ o erro cai para $1.6 \times 10^{-7}$ (4 vezes menor), e para $N=256$ o erro é de $4.1 \times 10^{-8}$ (15 vezes menor que o inicial). Este comportamento demonstra que o método funciona perfeitamente para valores pequenos de $k$.
 
-\subsection*{Regra de Ouro — Pontos por comprimento de onda}
+Para $k=20$ (frequência média), observamos uma degradação na precisão, com erro relativo de $4.2 \times 10^{-2}$ para $N=128$, o que corresponde a 4.2\%. A taxa de convergência cai para $p \approx 1.5-1.8$, indicando o início do efeito de poluição numérica. Para $N=64$ temos erro de $2.1 \times 10^{-1}$ (21\%), para $N=128$ o erro é $4.2 \times 10^{-2}$ (4.2\%, 5 vezes menor), e para $N=256$ o erro cai para $1.0 \times 10^{-2}$ (1.0\%, 21 vezes menor que o inicial). Apesar da degradação, ainda obtemos precisão aceitável com malhas refinadas.
 
-\begin{itemize}
-    \item \textbf{Definição}: $N_{\lambda} = \frac{2\pi N}{k}$ pontos por comprimento de onda
-    \begin{itemize}
-        \item $N$: número de subintervalos
-        \item $k$: número de onda
-        \item Comprimento de onda: $\lambda = 2\pi/k$
-    \end{itemize}
-    
-    \item \textbf{Recomendação}: $N_{\lambda} \gtrsim 10-20$ pontos por comprimento de onda
-    
-    \item \textbf{Exemplos}:
-    \begin{itemize}
-        \item $k=1$, $N=64$: $N_{\lambda} = \frac{2\pi \times 64}{1} \approx 402$ (excelente)
-        \item $k=20$, $N=128$: $N_{\lambda} = \frac{2\pi \times 128}{20} \approx 40$ (bom)
-        \item $k=100$, $N=256$: $N_{\lambda} = \frac{2\pi \times 256}{100} \approx 16$ (marginal)
-    \end{itemize}
-    
-    \item \textbf{Requisito para alta frequência}: $N_{\lambda} \geq 20-30$ para precisão aceitável
-\end{itemize}
+Para $k=40$ (alta frequência), observamos degradação significativa, com erro relativo de $2.8 \times 10^{-1}$ para $N=128$, o que corresponde a 28\%. A taxa de convergência cai para $p \approx 1.2-1.5$. Para obter precisão aceitável, é necessário utilizar $N \geq 256$.
+
+Para $k=100$ (muito alta frequência), observamos poluição numérica severa, com erro relativo superior a 1.0, podendo ultrapassar 300\%. A taxa de convergência cai para $p < 1$, indicando degradação muito severa. Para $N=64$ temos erro de 2.5 (250\%), para $N=128$ o erro é 1.5 (150\%), e surpreendentemente, para $N=256$ o erro aumenta para 3.6 (360\%), demonstrando que mesmo com refinamento, o erro permanece alto e pode até piorar devido à poluição numérica.
+
+\subsection*{Regra de Ouro — Pontos por Comprimento de Onda}
+
+A regra de ouro é definida através de $N_{\lambda} = \frac{2\pi N}{k}$, que representa o número de pontos por comprimento de onda. A recomendação é ter $N_{\lambda} \gtrsim 10-20$ pontos por comprimento de onda para obter precisão aceitável. Ilustrando com exemplos: para $k=1$ e $N=64$, temos $N_{\lambda} \approx 402$ pontos (excelente); para $k=20$ e $N=128$, temos $N_{\lambda} \approx 40$ pontos (bom); para $k=100$ e $N=256$, temos $N_{\lambda} \approx 16$ pontos (marginal). Para casos de alta frequência, recomendamos $N_{\lambda} \geq 20-30$ pontos por comprimento de onda.
 
 \subsection*{Desempenho Computacional}
 
-\begin{itemize}
-    \item \textbf{$N=64$}:
-    \begin{itemize}
-        \item Incógnitas: $63 \times 63 = 3.969$
-        \item Tempo de construção: $0.001$ s
-        \item Tempo de solução: $0.008$ s
-        \item Solver: SPLU
-    \end{itemize}
-    
-    \item \textbf{$N=128$}:
-    \begin{itemize}
-        \item Incógnitas: $127 \times 127 = 16.129$
-        \item Tempo de construção: $0.003$ s
-        \item Tempo de solução: $0.039$ s
-        \item Solver: SPLU
-    \end{itemize}
-    
-    \item \textbf{$N=192$}:
-    \begin{itemize}
-        \item Incógnitas: $191 \times 191 = 36.481$
-        \item Tempo de construção: $0.006$ s
-        \item Tempo de solução: $0.117$ s
-        \item Solver: SPLU
-    \end{itemize}
-    
-    \item \textbf{$N=256$}:
-    \begin{itemize}
-        \item Incógnitas: $255 \times 255 = 65.025$
-        \item Tempo de construção: $0.012$ s
-        \item Tempo de solução: $0.423$ s
-        \item Solver: GMRES+ILU (necessário para sistemas grandes)
-    \end{itemize}
-    
-    \item \textbf{Otimizações}:
-    \begin{itemize}
-        \item Cache: $\sim 90\%$ mais rápido na construção
-        \item Paralelização: 3-4 vezes mais rápido no processamento
-    \end{itemize}
-\end{itemize}
+Os tempos de execução são os seguintes: para $N=64$ temos 3.969 incógnitas e tempo de solução de 0.008 segundos utilizando SPLU; para $N=128$ temos 16.129 incógnitas e tempo de 0.039 segundos (SPLU); para $N=192$ temos 36.481 incógnitas e tempo de 0.117 segundos (SPLU); para $N=256$ temos 65.025 incógnitas e tempo de 0.423 segundos utilizando GMRES+ILU, que se torna necessário para sistemas grandes. As otimizações implementadas resultam em ganhos significativos: o cache torna a construção aproximadamente 90\% mais rápida, e a paralelização acelera o processamento em 3 a 4 vezes.
 
-\section*{ANÁLISE E DISCUSSÃO}
+\section*{ANÁLISE E CONCLUSÕES}
 
-\begin{itemize}
-    \item \textbf{Poluição numérica}:
-    \begin{itemize}
-        \item Definição: mesmo com refinamento, erro cresce com aumento de $k$
-        \item Causa: poucos pontos por comprimento de onda ($N_{\lambda} < 20$)
-        \item Mecanismo:
-        \begin{enumerate}
-            \item Poucos pontos por comprimento de onda
-            \item Erro de fase: velocidade de fase numérica $\neq$ exata
-            \item Acúmulo: erro se propaga e amplifica
-            \item Resultado: solução numérica "atrasa" espacialmente
-        \end{enumerate}
-        \item Consequência: taxa de convergência degrada ($p < 2$)
-    \end{itemize}
-    
-    \item \textbf{Comparação entre grupos}:
-    \begin{itemize}
-        \item Diferenças pequenas mas significativas
-        \item Devido à direção das ondas planas na solução exata
-        \item Efeito secundário comparado à influência de $k$ e $N$
-    \end{itemize}
-    
-    \item \textbf{Validação}:
-    \begin{itemize}
-        \item Resultados consistentes com literatura
-        \item Taxa de convergência $p \approx 2.0$ para $k$ pequeno (conforme teoria)
-        \item Requisito de malha $N_{\lambda} \geq 10-20$ (alinhado com literatura)
-        \item Poluição numérica observada conforme esperado
-    \end{itemize}
-    
-    \item \textbf{Limitações do método}:
-    \begin{itemize}
-        \item Poluição numérica inerente a métodos de baixa ordem
-        \item Custo computacional cresce com $N^2$
-        \item Limitado a domínios retangulares simples
-        \item Para $k$ grande, requer malhas muito refinadas
-    \end{itemize}
-\end{itemize}
+O fenômeno de poluição numérica ocorre quando, mesmo com refinamento da malha, o erro cresce com o aumento do número de onda $k$. A causa fundamental é ter poucos pontos por comprimento de onda ($N_{\lambda} < 20$), o que leva a um erro de fase que se acumula e amplifica, fazendo com que a solução numérica "atrase" espacialmente em relação à solução exata. A consequência é que a taxa de convergência degrada para $p < 2$, não atingindo a ordem teórica do método.
 
-\section*{CONCLUSÕES}
+Concluímos que o MDFC2 é adequado para valores moderados do número de onda, especificamente para $k \leq 20$, onde obtemos boa precisão com malhas razoáveis e erros aceitáveis menores que 5\% com $N \geq 128$. A taxa de convergência confirma a ordem teórica de 2 para valores pequenos de $k$, com $p \approx 2.0$ para $k=1$, validando tanto a implementação quanto a análise teórica.
 
-\begin{itemize}
-    \item \textbf{MDFC2 adequado} para $k \leq 20$
-    \begin{itemize}
-        \item Boa precisão com malhas razoáveis
-        \item Erros aceitáveis ($< 5\%$ com $N \geq 128$)
-    \end{itemize}
-    
-    \item \textbf{Taxa de convergência} confirma ordem 2 para $k$ pequeno
-    \begin{itemize}
-        \item $p \approx 2.0$ para $k=1$
-        \item Valida implementação e análise teórica
-    \end{itemize}
-    
-    \item \textbf{Poluição numérica} limita eficiência para $k$ grande
-    \begin{itemize}
-        \item Fenômeno inerente a métodos de baixa ordem
-        \item Requer técnicas mais sofisticadas para mitigar
-    \end{itemize}
-    
-    \item \textbf{IA útil} como ferramenta de suporte acadêmico
-    \begin{itemize}
-        \item Auxiliou na implementação, análise e documentação
-    \end{itemize}
-    
-    \item \textbf{Perspectivas futuras}:
-    \begin{itemize}
-        \item Métodos de ordem superior (4ª, 6ª ordem)
-        \item Malhas adaptativas
-        \item Pré-condicionadores especializados
-        \item Extensão para 3D
-    \end{itemize}
-\end{itemize}
+A eficiência da implementação é notável: o uso de matrizes esparsas resulta em redução drástica de memória, o sistema de cache torna a construção aproximadamente 90\% mais rápida, a paralelização acelera o processamento em 3 a 4 vezes, e a seleção automática de solver garante robustez e eficiência para todos os casos. As perspectivas futuras incluem investigação de métodos de ordem superior (4ª ou 6ª ordem) que podem reduzir o efeito de poluição numérica, uso de malhas adaptativas que refinam localmente onde necessário, e desenvolvimento de pré-condicionadores especializados para a equação de Helmholtz.
 
 \section*{PONTOS-CHAVE PARA DESTACAR}
 
-\begin{itemize}
-    \item \textbf{Excelente precisão} para $k=1$: erro $< 10^{-6}$
-    \item \textbf{Boa precisão} para $k=20$ com $N \geq 128$: erro $< 5\%$
-    \item \textbf{Poluição numérica} severa para $k=100$: erro $> 300\%$
-    \item \textbf{Importância do refinamento}: $N=64 \to 256$ reduz erro em 21x para $k=20$
-    \item \textbf{Implementação eficiente}: matrizes esparsas, otimizações, seleção automática de solver
-\end{itemize}
-
-\section*{DICAS DE APRESENTAÇÃO}
-
-\begin{itemize}
-    \item \textbf{Início}: Contextualizar equação de Helmholtz e aplicações
-    \item \textbf{Metodologia}: Enfatizar simplicidade do MDFC2 e eficiência das matrizes esparsas
-    \begin{itemize}
-        \item Explicar claramente o que é $N$ e sua relação com o refinamento
-        \item Detalhar os solvers: SPLU e GMRES+ILU, com seus nomes completos
-    \end{itemize}
-    \item \textbf{Resultados}: Mostrar gráficos de superfície 3D e cortes 2D
-    \item \textbf{Análise}: Explicar poluição numérica de forma clara
-    \item \textbf{Conclusões}: Destacar limitações e perspectivas futuras
-    \item \textbf{Tempo}: Distribuir bem o tempo entre seções
-\end{itemize}
+Excelente precisão para $k=1$: erro menor que $10^{-6}$, demonstrando que o método funciona perfeitamente para baixas frequências. Boa precisão para $k=20$ com $N \geq 128$: erro menor que 5\%, mostrando que o método é adequado para frequências médias com malhas razoáveis. Poluição numérica severa para $k=100$: erro superior a 300\%, ilustrando as limitações do método para altas frequências. Importância do refinamento: ao aumentar de $N=64$ para $N=256$, reduzimos o erro em 21 vezes para $k=20$, demonstrando a eficácia do refinamento de malha. Cache como otimização crítica: reduz o tempo de construção em aproximadamente 90\%, sendo fundamental para viabilizar a análise de múltiplos casos. Implementação robusta: a seleção automática de solver garante solução para todos os casos, mesmo em situações problemáticas, através da estratégia de fallback.
 
 \end{document}

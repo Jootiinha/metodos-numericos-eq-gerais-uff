@@ -98,7 +98,7 @@ Para $N=128$ testando 6 grupos e 4 valores de $k$:
 \begin{algorithmic}[1]
 \Require Matriz esparsa $A$, vetor $b$
 \Ensure Solução $\mathbf{x}$ tal que $A\mathbf{x} = \mathbf{b}$
-\State $n \gets$ número de incógnitas
+\State $n \gets$ número de incógnitas ($n = (N-1)^2$)
 \If{$n \leq 40000$}
     \State $LU \gets$ \texttt{splu($A$)}
     \State $\mathbf{x} \gets LU.\texttt{solve($b$)}$
@@ -109,7 +109,7 @@ Para $N=128$ testando 6 grupos e 4 valores de $k$:
 \vspace{-0.2cm}
 \begin{block}{Complexidade}
 \tiny
-Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
+Fatoração: $O(n^{3/2})$, Resolução: $O(n)$, Memória: $O(n)$
 \end{block}
 \end{frame}
 
@@ -119,7 +119,7 @@ Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
 \begin{algorithmic}[1]
 \Require Matriz esparsa $A$, vetor $b$
 \Ensure Solução $\mathbf{x}$ tal que $A\mathbf{x} = \mathbf{b}$
-\State $n \gets$ número de incógnitas
+\State $n \gets$ número de incógnitas ($n = (N-1)^2$)
 \If{$n > 40000$}
     \State $A \gets A.\texttt{astype(complex128)}$
     \State $ILU \gets$ \texttt{spilu($A$, drop\_tol=$10^{-3}$, fill\_factor=$20$)}
@@ -144,7 +144,7 @@ Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
 \begin{algorithmic}[1]
 \Require Matriz esparsa $A$, vetor $b$, modo $solver$
 \Ensure Solução $\mathbf{x}$ e solver utilizado
-\State $n \gets$ número de incógnitas
+\State $n \gets$ número de incógnitas ($n = (N-1)^2$)
 \If{$solver =$ \texttt{"auto"}}
     \If{$n \leq 40000$}
         \State $solver \gets$ \texttt{"splu"}
@@ -162,9 +162,17 @@ Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
 \end{frame}
 
 \begin{frame}{Estratégia de Fallback}
+\begin{block}{Notação Importante}
+\begin{itemize}
+\item $N$: número de subintervalos em cada direção
+\item $n$: número de incógnitas do sistema ($n = (N-1)^2$)
+\item Exemplo: $N=192$ $\Rightarrow$ $n = 191^2 = 36.481$ incógnitas
+\item Exemplo: $N=256$ $\Rightarrow$ $n = 255^2 = 65.025$ incógnitas
+\end{itemize}
+\end{block}
+
 \begin{block}{Modo Auto}
 \begin{itemize}
-\item Escolha automática do solver baseada no tamanho do sistema
 \item Heurística: $n \leq 40000$ usa SPLU, $n > 40000$ usa GMRES+ILU
 \end{itemize}
 \end{block}
@@ -173,7 +181,6 @@ Fatoração: $O(N^3)$, Resolução: $O(N^2)$, Memória: $O(N^2)$
 \begin{itemize}
 \item Se ILU falha e $n \leq 100000$: usa SPLU
 \item Se ILU falha e $n > 100000$: usa GMRES sem pré-condicionador
-\item Garante solução para todos os casos
 \end{itemize}
 \end{block}
 \end{frame}
